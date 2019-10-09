@@ -4,7 +4,7 @@
 
 [Glicko2 on Wikipedia](https://en.wikipedia.org/wiki/Glicko_rating_system)
 
-> The Glicko-2 rating system is intended to estimate the skill of player performance in head-to-head competiotion in a variety of games.
+> The Glicko-2 rating system is intended to estimate the skill of player performance in head-to-head competition in a variety of games.
 
 [Description of Glicko-2 system](http://www.glicko.net/ratings/glicko2desc.pdf)
 
