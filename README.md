@@ -16,7 +16,7 @@ and the [example of the Glicko-2 system](http://www.glicko.net/glicko/glicko2.pd
 
 ## Install
 
-Add the library in `built.sbt`
+Add the library in `build.sbt`
 ```scala
 libraryDependencies += "com.github.andriykuba" % "scala-glicko2" % "1.0.0" 
 ```
