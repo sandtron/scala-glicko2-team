@@ -11,6 +11,10 @@
 For more details, please, look at [the Mark Glickman site](http://www.glicko.net/)
 and the [example of the Glicko-2 system](http://www.glicko.net/glicko/glicko2.pdf)
 
+## Team implementation
+
+Team implementation is based off of http://rhetoricstudios.com/downloads/AbstractingGlicko2ForTeamGames.pdf
+
 ## Special thanks
 
 This software builds upon the work of [Andriy Kuba](https://github.com/andriykuba) who developed the initial scala-Glicko2 implementation that is used within within this application.
