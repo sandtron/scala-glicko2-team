@@ -7,7 +7,7 @@ import com.github.andriykuba.scala.glicko2.scala.Glicko2.Parameters
 object Model {
 
   /**
-    * A id player.
+    * A idendifiable player.
     * For team applications, the identifier is used to ensure calculations are tracked.
     */
   case class GPlayer(
