@@ -1,83 +1,10 @@
 package com.sandtron.glicko2.team
-
+import com.github.andriykuba.scala.glicko2.scala.Glicko2.Win
+import com.github.andriykuba.scala.glicko2.scala.Glicko2.Loss
+import com.github.andriykuba.scala.glicko2.scala.Glicko2.Draw
+import com.github.andriykuba.scala.glicko2.scala.Glicko2.Game
 import com.github.andriykuba.scala.glicko2.scala.Glicko2
-import com.github.andriykuba.scala.glicko2.scala.Glicko2.{Player, Win, Loss, Draw, Game}
-import com.github.andriykuba.scala.glicko2.scala.Glicko2.Parameters
-
-object Model {
-
-  /**
-    * A idendifiable player.
-    * For team applications, the identifier is used to ensure calculations are tracked.
-    */
-  case class GPlayer(
-      id: String,
-      stats: Player
-  ) {
-    def update(p: Player): GPlayer = GPlayer(id, p)
-    override def toString(): String =
-      s"$id(${stats.rating},${stats.deviation},${stats.volatility})"
-
-  }
-  def defaultGPlayer(id: String): GPlayer =
-    GPlayer(id, Glicko2.defaultPlayer())
-
-  /**
-    * A team for calculation
-    */
-  case class GTeam(val gPlayers: Seq[GPlayer]) {
-    override def toString(): String =
-      s"TEAM[${gPlayers.mkString(", ")}]"
-  }
-
-  /**
-    * The match outcome enumeration
-    */
-  object Outcome extends Enumeration {
-    type Outcome = Value
-    val WIN, DRAW, LOSS = Value
-  }
-
-  /**
-    * A match between two teams.
-    * The outcome refers to the team
-    *
-    * eg:
-    *   GTeamMatch(t1,t2,WIN) => t1 WINS AGAINST t2
-    *   GTeamMatch(t1,t2,LOSS) => t1 LOSES AGAINST t2
-    *   GTeamMatch(t1,t2,DRAW) => t1 TIES AGAINST t2
-    *
-    */
-  case class GTeamMatch(
-      team: GTeam,
-      opponents: GTeam,
-      outcome: Outcome.Outcome
-  ) {
-
-    /**
-      * inverts the match
-      * eg t1 WINS AGAINST t2 => t2 LOSES AGAINST t1
-      */
-    def inverse: GTeamMatch =
-      GTeamMatch(opponents, team, outcome match {
-        case Outcome.WIN  => Outcome.LOSS
-        case Outcome.LOSS => Outcome.WIN
-        case d            => d
-      })
-    override def toString: String =
-      s"$team ${outcome match {
-        case Outcome.WIN  => "WINS";
-        case Outcome.DRAW => "TIES";
-        case Outcome.LOSS => "LOSES"
-      }} AGAINST $opponents"
-  }
-
-  case class GMatchUpdate(team: GTeam, opponent: GTeam) {
-    def gPlayers: Seq[GPlayer]      = team.gPlayers ++ opponent.gPlayers
-    override def toString(): String = s"GMatchUpdate[${gPlayers.mkString(",")}]"
-  }
-
-}
+import com.github.andriykuba.scala.glicko2.scala.Glicko2.Player
 
 object Glicko2Team {
   import Model._
@@ -180,6 +107,7 @@ object Glicko2Team {
     )
 
   def test(): Unit = {
+    def defaultGPlayer(name: String): GPlayer = GPlayer(name, Glicko2.defaultPlayer())
 
     val p1 = defaultGPlayer("Alice")
     val p2 = defaultGPlayer("Bob")
