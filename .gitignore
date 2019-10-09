@@ -29,3 +29,5 @@ perfStats.log
 .DS_Store
 .cache-main
 .cache-tests
+.bloop
+.metals
