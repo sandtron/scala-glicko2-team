@@ -31,3 +31,4 @@ perfStats.log
 .cache-tests
 .bloop
 .metals
+db
