@@ -27,16 +27,28 @@ abstract class BaseSqlStore {
   }
   implicit class RichRs(val rs: ResultSet) {
     def unsafeIterate(): Iterator[ResultSet] = new Iterator[ResultSet] {
-      def hasNext: Boolean           = rs.next()
+
+      def hasNext: Boolean = {
+        val hn = rs.next()
+        if (!hn) {
+          rs.close()
+        }
+        hn
+      }
+
       def next(): java.sql.ResultSet = rs
     }
     def unsafeHeadOption(): Option[ResultSet] = if (rs.next()) Some(rs) else None
   }
 
-  def init(): Unit = queries.iterator.filter(_._1.startsWith("create.table.")).foreach {
-    case (propName, sql) => createTableIfNotExists(propName.split("\\.")(2), sql)
+  def init(): Unit = {
+    queries.iterator
+      .filter(_._1.startsWith("db.config.create"))
+      .map {
+        case (propName, sql) => sql
+      }
+      .foreach(sql => usingCon(c => c.prepareStatement(sql).executeUpdate()).get)
   }
-
   protected def use[R: Releasable, A](resource: => R)(f: R => A): Try[A] =
     Using(resource)(f)
 

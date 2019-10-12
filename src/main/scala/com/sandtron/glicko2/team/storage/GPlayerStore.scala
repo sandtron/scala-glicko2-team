@@ -3,6 +3,7 @@ import com.sandtron.glicko2.team.Model.GPlayer
 import com.github.andriykuba.scala.glicko2.scala.Glicko2.Player
 import com.sandtron.glicko2.team.Model.GTeamMatch
 import java.time.LocalDateTime
+import com.sandtron.glicko2.team.Model.GTeam
 
 trait GPlayerStore {
   def defaultPlayer(): Player
@@ -35,8 +36,9 @@ trait GPlayerStore {
   def loadGPlayers(): Seq[GPlayer]
 }
 trait GTeamMatchStore {
+  def addMatch(gTeamMatch: GTeamMatch): Unit
 
-  def addMatches(matches: Seq[GTeamMatch]): Unit
+  def addMatches(matches: Seq[GTeamMatch]): Unit = matches.foreach(addMatch)
 
   def loadMatches(): Seq[GTeamMatch]
 
@@ -51,3 +53,4 @@ trait GTeamMatchStore {
   def loadMatches(start: LocalDateTime, end: LocalDateTime, gPlayers: GPlayer*): Seq[GTeamMatch]
 
 }
+
