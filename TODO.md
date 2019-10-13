@@ -20,6 +20,7 @@
 - implement writeStore for Csv
   - implement active gplayer csv
 - clean up and actually use HSQL implementation
+- make implementations actaully efficient instead of loading everything into memory...
 
 ## Far Future
 
