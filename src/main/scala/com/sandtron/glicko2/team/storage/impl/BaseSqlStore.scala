@@ -10,35 +10,59 @@ import java.sql.Connection
 import scala.util.Try
 import java.sql.ResultSet
 import java.sql.DriverManager
-abstract class BaseSqlStore {
-  lazy val queries = {
+import org.slf4j.LoggerFactory
+import javax.sql.rowset._
+import scala.collection.mutable
+import com.sandtron.glicko2.team.Model.GPlayer
+import com.sandtron.glicko2.team.Model.GTeam
+import java.sql.Date
 
-    Using(fromURL(getClass.getResource("/base-sql-queries.properties")).bufferedReader())(
-      reader => {
-        val p = new ju.Properties()
-        p.load(reader)
-        p.asScala
-      }
-    ) match {
-
-      case Success(props)        => props
-      case Failure(e: Throwable) => throw e
-    }
+object BaseSqlStore {
+  lazy val logger = LoggerFactory.getLogger(classOf[BaseSqlStore])
+  trait LazyEntity[A] {
+    def entity: A
   }
-  implicit class RichRs(val rs: ResultSet) {
-    def unsafeIterate(): Iterator[ResultSet] = new Iterator[ResultSet] {
+  class LazyGTeam(team: => Seq[GPlayer]) extends GTeam with LazyEntity[Seq[GPlayer]] {
+    var loaded                      = false;
+    lazy val entity                 = { loaded = true; team }
+    lazy val gPlayers               = entity
+    override def toString(): String = s"LazyGTeam[${if (loaded) gPlayers else "NOT LOADED"}]"
+  }
+  object implicits {
 
-      def hasNext: Boolean = {
-        val hn = rs.next()
-        if (!hn) {
-          rs.close()
+    implicit class RichRs(rs: ResultSet) {
+      // TODO: find a better way to this that doesn't cache everything
+      def map[A](mapper: ResultSet => A): Iterator[A] = {
+        val mapped = new mutable.ListBuffer[A]()
+        while (rs.next()) {
+          mapped.addOne(mapper(rs))
         }
-        hn
+        rs.close()
+        mapped.toStream.iterator
       }
 
-      def next(): java.sql.ResultSet = rs
+      def flatMap[A](mapper: ResultSet => Iterator[A]): Iterator[A] = rs.map(mapper).flatten
     }
-    def unsafeHeadOption(): Option[ResultSet] = if (rs.next()) Some(rs) else None
+
+  }
+
+}
+abstract class BaseSqlStore {
+
+  import BaseSqlStore.implicits._
+
+  private lazy val logger = BaseSqlStore.logger
+
+  lazy val queries = Using(fromURL(getClass.getResource("/base-sql-queries.properties")).bufferedReader())(
+    reader => {
+      val p = new ju.Properties()
+      p.load(reader)
+      p.asScala
+    }
+  ) match {
+
+    case Success(props)        => props
+    case Failure(e: Throwable) => throw e
   }
 
   def init(): Unit = {
@@ -75,26 +99,38 @@ abstract class BaseSqlStore {
     }).get
   }
 
-  protected def getAllDataFromTable[A](tableName: String)(rsHandler: ResultSet => A): Try[A] =
-    select(s"SELECT * FROM $tableName")(rsHandler)
+  protected def getAllDataFromTable[A](tableName: String)(rsHandler: ResultSet => A): A =
+    rsHandler(select(s"SELECT * FROM $tableName"))
 
-  protected def select[A](selectStatement: String)(handler: ResultSet => A): Try[A] =
-    usingCon(c => c.prepareStatement(selectStatement).executeQuery).map(handler)
+  protected def select[A](selectStatement: String): ResultSet =
+    usingCon(c => {
+      logger.trace("executing {}", selectStatement)
+      c.prepareStatement(selectStatement).executeQuery
+    }).get
 
-  protected def select[A](selectStatement: String, params: Any*)(handler: ResultSet => A): Try[A] =
+  protected def select[A](selectStatement: String, params: Any*): ResultSet =
     usingCon(c => {
       val ps = c.prepareStatement(selectStatement)
-      params.indices.foreach(n => ps.setObject(n + 1, params(n)))
+      processParams(params).indices.foreach(n => ps.setObject(n + 1, params(n)))
+      logger.trace("executing {}, params=[{}]", selectStatement, params.mkString(","))
       ps.executeQuery()
-    }).map(handler)
+    }).get
 
   protected def upsert(upsertStmt: String, params: Any*) =
     usingCon(con => {
-      println(s"executing $upsertStmt with ${params.map(p => s"[$p:${p.getClass().getSimpleName()}]")}")
+      logger.debug(s"executing $upsertStmt with ${params.map(p => s"[$p:${p.getClass().getSimpleName()}]")}")
 
       val ps = con.prepareStatement(upsertStmt)
-      params.indices.foreach(n => ps.setObject(n + 1, params(n)))
-      println("executing upsert")
+      processParams(params).indices.foreach(n => ps.setObject(n + 1, params(n)))
+      logger.debug("executing upsert {}, params=[{}]", upsertStmt, params)
       ps.executeUpdate()
     }).get
+
+  protected def processParams(params: Seq[Any]): Seq[Any] =
+    params
+      .map(_ match {
+        case d: ju.Date => new Date(d.getTime)
+        case x: Any     => x
+      })
+      .toList
 }

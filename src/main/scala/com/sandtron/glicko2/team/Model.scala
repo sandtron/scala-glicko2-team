@@ -1,30 +1,10 @@
 package com.sandtron.glicko2.team
 import com.github.andriykuba.scala.glicko2.scala.Glicko2.Player
 import com.github.andriykuba.scala.glicko2.scala.Glicko2
+import java.time.LocalDateTime
+import java.{util => ju}
 
 object Model {
-
-  /**
-    * A idendifiable player.
-    * For team applications, the identifier is used to ensure calculations are tracked.
-    */
-  case class GPlayer(
-      name: String,
-      stats: Player
-  ) {
-    def update(p: Player): GPlayer = GPlayer(name, p)
-    override def toString(): String =
-      s"$name(${stats.rating},${stats.deviation},${stats.volatility})"
-
-  }
-
-  /**
-    * A team for calculation
-    */
-  case class GTeam(val gPlayers: Seq[GPlayer]) {
-    override def toString(): String =
-      s"TEAM[${gPlayers.mkString(", ")}]"
-  }
 
   /**
     * The match outcome enumeration
@@ -32,6 +12,68 @@ object Model {
   object Outcome extends Enumeration {
     type Outcome = Value
     val WIN, DRAW, LOSS = Value
+  }
+
+  trait GMatchRecord {
+    def team: Seq[String]
+    def opponents: Seq[String]
+    def outcome: Outcome.Outcome
+    def gameTime: ju.Date
+    def toGTeamMatch(gPlayers: Seq[GPlayer]): GTeamMatch =
+      toGTeamMatch(gPlayers.map(gp => gp.name -> gp).toMap)
+    def toGTeamMatch(gPlayers: Map[String, GPlayer]): GTeamMatch =
+      GTeamMatch(GTeam(team.map(gPlayers.get(_).get)), GTeam(opponents.map(gPlayers.get(_).get)), outcome)
+  }
+  object GMatchRecord {
+    def apply(
+        initTeam: => Seq[String],
+        initOpp: => Seq[String],
+        initOutcome: => Outcome.Outcome,
+        initGameTime: ju.Date
+    ): GMatchRecord = new GMatchRecord {
+      lazy val team: Seq[String]        = initTeam
+      lazy val opponents: Seq[String]   = initOpp
+      lazy val outcome: Outcome.Outcome = initOutcome
+      lazy val gameTime: ju.Date        = initGameTime
+    }
+  }   
+
+  /**
+    * A idendifiable player.
+    * For team applications, the identifier is used to ensure calculations are tracked.
+    */
+  trait GPlayer {
+    def name: String
+    def stats: Player
+    def time: ju.Date
+    def update(p: Player): GPlayer = GPlayer(name, p)
+    override def toString(): String =
+      s"$name(${stats.rating},${stats.deviation},${stats.volatility})"
+
+  }
+  object GPlayer {
+    def apply(initName: => String, initStats: => Player): GPlayer = apply(initName, initStats, new ju.Date())
+
+    def apply(initName: => String, initStats: => Player, initTime: ju.Date): GPlayer = new GPlayer {
+      lazy val name  = initName
+      lazy val stats = initStats
+      val time       = initTime
+    }
+  }
+
+  /**
+    * A team for calculation
+    */
+  trait GTeam {
+
+    def gPlayers: Seq[GPlayer]
+    override def toString(): String =
+      s"TEAM[${gPlayers.mkString(", ")}]"
+  }
+  object GTeam {
+    def apply(initGPlayers: => Seq[GPlayer]) = new GTeam() {
+      lazy val gPlayers: Seq[com.sandtron.glicko2.team.Model.GPlayer] = initGPlayers
+    }
   }
 
   /**

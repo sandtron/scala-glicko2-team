@@ -32,3 +32,4 @@ perfStats.log
 .bloop
 .metals
 db
+logs

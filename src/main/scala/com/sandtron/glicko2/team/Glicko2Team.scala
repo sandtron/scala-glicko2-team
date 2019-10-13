@@ -45,7 +45,7 @@ object Glicko2Team {
     * a team match as a set of 1­versus­1 matches.
     *
     * For example, consider a
-    * game where Alice participates on a team versus an opposingteam consisting of
+    * game where Alice participates on a team versus an opposing team consisting of
     * Bob, Carol, Dan, and Eve. If Alice’s team wins,
     * the game updates Alice’srating by considering this game as four wins:
     * one against Bob, one against Carol, one againstDan, and one against Eve.
