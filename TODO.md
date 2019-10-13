@@ -10,6 +10,7 @@
 - implement command line args
 - implement decay(happens when a player does not play for a while)
 - figure out benefit of using hsql...
+- clean up general code(logging, proper structuring of code (dateformatter))
 
 ## Near Future
 
