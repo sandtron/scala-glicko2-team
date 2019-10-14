@@ -34,3 +34,6 @@ perfStats.log
 db
 logs
 glicko2team/bin
+glicko2team/glicko2team.jar
+project/.bloop
+project/project
