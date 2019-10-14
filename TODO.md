@@ -2,7 +2,7 @@
 
 ## 1.0
 
-- Only support CSV, leave HSQL code for now
+- ~~Only support CSV, leave HSQL code for now~~
 - Implement CSV files setup if not found for easy user interaction
 - Make README actually useful
 - make standalone jar

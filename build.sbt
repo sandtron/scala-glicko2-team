@@ -21,3 +21,5 @@ libraryDependencies += "org.hsqldb" % "hsqldb" % "2.4.1"
 
 // for logging
 libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.2.3"
+
+assemblyJarName := "glicko2team.jar"
