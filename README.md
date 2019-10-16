@@ -1,4 +1,4 @@
-# Scala implementation of the Glicko-2 system
+# A Simple Team based Glicko2 Application
 
 A standalone application for managing a set of players given a history of games.
 
