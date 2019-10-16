@@ -19,7 +19,14 @@ Team implementation is based off of information from [rhetoricstudios.com paper]
 
 ## Requirements
 
-Java must be installed on the system
+Java must be installed on the system.
+Scala is required for building.
+
+## Building
+
+`sbt assembly` will build the app into ./target...
+
+build.sh will compile the app and move it to the glicko2team directory
 
 ## Usage
 
