@@ -1,5 +1,5 @@
 TEAM1,TEAM2,OUTCOME,DATETIME
 Alice|Bob,Carol|Dave,WIN,2019-10-11 12:00
-Alice|Carol,Bob|Dave,LOSS,2019-10-11 12:15
-Alice|Dave,Carol|Bob,DRAW,2019-10-12 13:00
-Alice|Bob,Carol|Dave,WIN,2019-10-12 13:20
+Alice|Carol,Bob|Eve,LOSS,2019-10-11 12:15
+Alice|Eve,Carol|Bob,DRAW,2019-10-12 13:00
+Alice|Bob,Carol|Eve,WIN,2019-10-12 13:20

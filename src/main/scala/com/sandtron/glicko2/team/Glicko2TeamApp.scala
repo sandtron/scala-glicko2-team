@@ -39,22 +39,39 @@ object Glicko2TeamApp {
   implicit def gplyr2String(gPlayer: GPlayer): String                  = gPlayer.name
   implicit def gplyrSeq2StringSeq(gPlayers: Seq[GPlayer]): Seq[String] = gPlayers.map(_.name)
 
-  def computeAllMatches(db: ReadOnlyGlicko2TeamStore, matchEvaluator: GTeamMatch => GMatchUpdate): Seq[GPlayer] = {
-    val matches  = db.loadMatches().toSeq
-    val gplayers = new mutable.HashMap[String, GPlayer]()
+  def computeAllMatches(
+      db: ReadOnlyGlicko2TeamStore,
+      ratingPeriodGames: Int,
+      matchEvaluator: GTeamMatch => GMatchUpdate
+  ): Seq[GPlayer] = {
+    val allMatches = db.loadMatches().toSeq
+    val gplayers   = new mutable.HashMap[String, GPlayer]()
     gplayers.addAll(
-      matches
+      allMatches
         .flatMap(m => m.team ++ m.opponents)
         .distinct
         .map(db.getGPlayer(_))
         .map(gp => gp.name -> gp)
     )
-    matches.foreach(
-      m =>
-        matchEvaluator(m.toGTeamMatch(gplayers.values.toSeq)).gPlayers
-          .map(gp => gp.name -> gp)
-          .foreach(c => gplayers.update(c._1, c._2))
-    )
+    allMatches
+      .sliding(ratingPeriodGames)
+      .foreach(matches => {
+        // handle games that have been played
+        matches.foreach(
+          m =>
+            matchEvaluator(m.toGTeamMatch(gplayers.values.toSeq)).gPlayers
+              .map(gp => gp.name -> gp)
+              .foreach(c => gplayers.update(c._1, c._2))
+        )
+
+        // handle decay of players who have not played in this period
+        val hasPlayed: Seq[String] = matches.flatMap(m => m.team ++ m.opponents)
+
+        gplayers
+          .filterKeys(!hasPlayed.contains(_))
+          .values
+          .foreach(p => gplayers.update(p.name, p.update(Glicko2.update(p.stats))))
+      })
 
     gplayers.values.toList
 
@@ -78,6 +95,7 @@ object Glicko2TeamApp {
           BigDecimal(props.get("player.default.volatility").get)
         )
       ),
+      props.get("glicko2.team.ratingPeriod.games").flatMap(_.toIntOption).getOrElse(15),
       props.get("glicko2.team.algorithm").map(_.toUpperCase) match {
         case Some("COMPOSITE")  => Glicko2Team.evaluateCompositeUpdate
         case None               => Glicko2Team.evaluateCompositeUpdate
