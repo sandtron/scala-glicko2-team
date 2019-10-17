@@ -30,7 +30,9 @@ class HsqlStore(val dbName: String, val defaultPlayer: Player) extends BaseSqlSt
 
   def usingCon[A](withConFun: Connection => A): Try[A] = {
     Class.forName("org.hsqldb.jdbcDriver");
-    Using(DriverManager.getConnection(s"jdbc:hsqldb:file:db/$dbName;shutdown=true;hsqldb.reconfig_logging=false", "SA", ""))(withConFun)
+    Using(
+      DriverManager.getConnection(s"jdbc:hsqldb:file:db/$dbName;shutdown=true;hsqldb.reconfig_logging=false", "SA", "")
+    )(withConFun)
   }
   private def createGPlayerFromRs(rs: ResultSet): GPlayer = {
     GPlayer(
@@ -57,7 +59,7 @@ class HsqlStore(val dbName: String, val defaultPlayer: Player) extends BaseSqlSt
 
       lazy val team: Seq[String]      = loadTeamMembers(t1).toSeq
       lazy val opponents: Seq[String] = loadTeamMembers(t2).toSeq
-
+      lazy val gPlayers: Seq[String]  = team ++ opponents
     }
 
   // Members declared in mr.sandtron.glicko2.team.storage.GPlayerStore

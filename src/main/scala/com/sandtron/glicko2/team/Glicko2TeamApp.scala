@@ -44,36 +44,41 @@ object Glicko2TeamApp {
       ratingPeriodGames: Int,
       matchEvaluator: GTeamMatch => GMatchUpdate
   ): Seq[GPlayer] = {
-    val allMatches = db.loadMatches().toSeq
-    val gplayers   = new mutable.HashMap[String, GPlayer]()
-    gplayers.addAll(
-      allMatches
-        .flatMap(m => m.team ++ m.opponents)
-        .distinct
-        .map(db.getGPlayer(_))
-        .map(gp => gp.name -> gp)
-    )
+    val allMatches  = db.loadMatches().toSeq
+    val allGPlayers = new mutable.HashMap[String, GPlayer]()
+
     allMatches
       .sliding(ratingPeriodGames)
       .foreach(matches => {
-        // handle games that have been played
+        // add any new players to the list of all players
+        allGPlayers
+          .addAll(
+            matches
+              .flatMap(_.gPlayers)
+              .distinct
+              .filter(!allGPlayers.keySet.contains(_))
+              .map(db.getGPlayer(_))
+              .map(gp => gp.name -> gp)
+          )
+
+        // handle games that have been played this period
         matches.foreach(
           m =>
-            matchEvaluator(m.toGTeamMatch(gplayers.values.toSeq)).gPlayers
+            matchEvaluator(m.toGTeamMatch(allGPlayers.values.toSeq)).gPlayers
               .map(gp => gp.name -> gp)
-              .foreach(c => gplayers.update(c._1, c._2))
+              .foreach(c => allGPlayers.update(c._1, c._2))
         )
 
-        // handle decay of players who have not played in this period
+        // handle decay of players who have not played in this period but have played before.
         val hasPlayed: Seq[String] = matches.flatMap(m => m.team ++ m.opponents)
 
-        gplayers
+        allGPlayers
           .filterKeys(!hasPlayed.contains(_))
           .values
-          .foreach(p => gplayers.update(p.name, p.update(Glicko2.update(p.stats))))
+          .foreach(p => allGPlayers.update(p.name, p.update(Glicko2.update(p.stats))))
       })
 
-    gplayers.values.toList
+    allGPlayers.values.toList
 
   }
   def main(args: Array[String]): Unit = {

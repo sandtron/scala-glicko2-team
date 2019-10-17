@@ -19,6 +19,7 @@ object Model {
     def opponents: Seq[String]
     def outcome: Outcome.Outcome
     def gameTime: ju.Date
+    def gPlayers: Seq[String] 
     def toGTeamMatch(gPlayers: Seq[GPlayer]): GTeamMatch =
       toGTeamMatch(gPlayers.map(gp => gp.name -> gp).toMap)
     def toGTeamMatch(gPlayers: Map[String, GPlayer]): GTeamMatch =
@@ -33,10 +34,11 @@ object Model {
     ): GMatchRecord = new GMatchRecord {
       lazy val team: Seq[String]        = initTeam
       lazy val opponents: Seq[String]   = initOpp
+      lazy val gPlayers: Seq[String]    = team ++ opponents
       lazy val outcome: Outcome.Outcome = initOutcome
       lazy val gameTime: ju.Date        = initGameTime
     }
-  }   
+  }
 
   /**
     * A idendifiable player.
@@ -91,6 +93,7 @@ object Model {
       opponents: GTeam,
       outcome: Outcome.Outcome
   ) {
+    def gPlayers: Seq[GPlayer] = team.gPlayers ++ opponents.gPlayers
 
     /**
       * inverts the match
