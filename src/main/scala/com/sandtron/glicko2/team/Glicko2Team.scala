@@ -5,10 +5,14 @@ import com.github.andriykuba.scala.glicko2.scala.Glicko2.Draw
 import com.github.andriykuba.scala.glicko2.scala.Glicko2.Game
 import com.github.andriykuba.scala.glicko2.scala.Glicko2
 import com.github.andriykuba.scala.glicko2.scala.Glicko2.Player
+import org.slf4j.LoggerFactory
+import org.slf4j.Logger
 
 object Glicko2Team {
   import Model._
   import Model.Outcome._
+
+  private val logger: Logger = LoggerFactory.getLogger(this.getClass)
 
   private def gameResultType(outcome: Outcome.Outcome): (GPlayer) => Game =
     outcome match {
@@ -31,11 +35,19 @@ object Glicko2Team {
         playerVsTeam: (GPlayer, GTeam, Outcome) => GPlayer
     ): GTeam =
       GTeam(m.team.gPlayers.map(playerVsTeam(_, m.opponents, m.outcome)))
-
-    GMatchUpdate(
+    if (logger.isDebugEnabled()) {
+      logger.debug("evaluating {}", gTeamMatch)
+    }
+    
+    val result = GMatchUpdate(
       teamVsTeam(gTeamMatch, playerVsTeam),
       teamVsTeam(gTeamMatch.inverse, playerVsTeam)
     )
+
+    if (logger.isDebugEnabled()) {
+      logger.debug("evaluated {} = {}", gTeamMatch, result)
+    }
+    result
   }
 
   /**
