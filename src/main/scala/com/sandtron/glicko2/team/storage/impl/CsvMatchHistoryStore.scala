@@ -21,6 +21,7 @@ class CsvMatchHistoryStore(csvFile: Path, dateFormatter: DateFormat, val default
         headers.addAll(lines.next().split(",").map(_.toUpperCase()))
       }
       lines
+        .filter(!_.isEmpty())
         .map(line => line.split(","))
         .toList
         .map(
@@ -44,7 +45,10 @@ class CsvMatchHistoryStore(csvFile: Path, dateFormatter: DateFormat, val default
   /**
     * loads all matches in database ordered by CREATED_TIME ASC
     */
-  def loadMatches(): Iterator[GMatchRecord] = parseCsv().toSeq.sortBy(m => m.gameTime).iterator
+  def loadMatches(): Iterator[GMatchRecord] =
+    parseCsv().toSeq
+      .sortBy(m => m.gameTime)
+      .iterator
 
   /**
     * loads all matches in database after the given time ordered by CREATED_TIME ASC
